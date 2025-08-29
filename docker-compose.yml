@@ -1,4 +1,3 @@
-version: "3.9"
 name: pathrag
 
 services:
@@ -9,49 +8,31 @@ services:
     image: pathrag-api:latest
     restart: unless-stopped
     env_file:
-      - .env   # секреты Azure/OpenAI и т.п.
+      - .env
     environment:
       HOST: 0.0.0.0
       PORT: 8000
-      # При едином origin CORS можно оставить пустым;
-      # при прямом доступе к API задавай список хостов через запятую.
-      CORS_ORIGINS: ${CORS_ORIGINS-}
-      # Для лога: info|debug
-      LOG_LEVEL: ${LOG_LEVEL-info}
-      # Ниже переменные будут проигнорированы rag_manager.py,
-      # но используются main.py для создания каталогов.
       WORKING_DIR: /app/data
       UPLOAD_DIR: /app/uploads
+      LOG_LEVEL: ${LOG_LEVEL-info}
     volumes:
-      # Персистентные данные PathRAG (именно /app/data — см. rag_manager.py)
       - pathrag_data:/app/data
       - pathrag_uploads:/app/uploads
-      # Персистентная БД SQLite через символическую ссылку /app/pathrag.db -> /state/pathrag.db
       - pathrag_state:/state
-    # Порт не публикуем наружу (доступ через web->nginx)
-    # ports:
-    #   - "8000:8000"
 
   web:
     build:
       context: .
       dockerfile: Dockerfile.ui
       args:
-        # UI будет стучаться к API по /api/*
         REACT_APP_API_URL: /api
     image: pathrag-web:latest
     restart: unless-stopped
     depends_on:
       - api
     ports:
-      - "80:80"
-    # Для Dokploy/Traefik можно добавить роутинг-хостнейм (пример, раскомментируй и подставь домен):
-    # labels:
-    #   - "traefik.enable=true"
-    #   - "traefik.http.routers.pathrag.rule=Host(`pathrag.example.com`)"
-    #   - "traefik.http.routers.pathrag.entrypoints=websecure"
-    #   - "traefik.http.routers.pathrag.tls.certresolver=lets-encrypt"
-    #   - "traefik.http.services.pathrag.loadbalancer.server.port=80"
+      - "${WEB_HOST_PORT-8088}:80"   # ← был "80:80"
+    # при необходимости добавь labels для маршрутизации
 
 volumes:
   pathrag_data:
