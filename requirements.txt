@@ -2,7 +2,8 @@ accelerate
 aioboto3
 aiohttp
 python-dotenv
-python-multipart
+python-multipart>=0.0.9
+email-validator>=2,<3
 fastapi
 uvicorn[standard]
 websockets
@@ -35,3 +36,4 @@ tiktoken
 torch
 transformers
 xxhash
+
